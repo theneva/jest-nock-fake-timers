@@ -25,7 +25,7 @@ async function sendRequest() {
     });
 }
 
-async function blah() {
+async function sendTwoSequentialRequests() {
     await sendRequest();
     await sendRequest();
 }
@@ -36,9 +36,19 @@ it('works when the function has sequential requests', async () => {
         .times(2)
         .reply(200, 'ok');
 
+    // Works with legacy timers, but I can't seem to find a workaround
+    // with modern ones without starting both requests before returning
+    // from blah()`.
     jest.useFakeTimers('legacy');
+    // jest.useFakeTimers('modern');
 
-    const promise = blah();
+    // Calling `runAllTicks()` once the function hits the first `await`
+    // makes a single request work with modern timers
+    // (see also https://github.com/facebook/jest/issues/10221),
+    // but I don't think it's possible to have the test code
+    // run all ticks again between landing the first request
+    // and setting off the second.
+    const promise = sendTwoSequentialRequests();
     jest.runAllTicks();
     await promise;
     expect(nock.isDone()).toBe(true);
