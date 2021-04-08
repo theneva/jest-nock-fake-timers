@@ -1,24 +1,7 @@
 const nock = require('nock');
 const http = require('http');
 
-const port = 6767;
-
-// let server;
-//
-// beforeAll(done => {
-//     console.log('binding');
-//     server = http.createServer((req, res) => {
-//         res.write('hello world');
-//         res.end();
-//     });
-//     server.listen(port, done);
-// });
-//
-// afterAll(done => {
-//     server.close(done);
-// });
-
-async function realRequest() {
+async function sendRequest() {
     return new Promise((resolve, reject) => {
         const req = http.request('http://localhost:6767/whatever', {}, res => {
             const responseChunks = [];
@@ -42,23 +25,21 @@ async function realRequest() {
     });
 }
 
-// const request = jest.fn(realRequest);
-//
-// async function blah() {
-//     await request();
-//     await request();
-// }
-
 async function blah() {
-    await realRequest();
-    await realRequest();
+    await sendRequest();
+    await sendRequest();
 }
 
-it('works', async () => {
+it('works when the function has sequential requests', async () => {
     nock('http://localhost:6767')
         .get('/whatever')
         .times(2)
         .reply(200, 'ok');
-    await blah();
+
+    jest.useFakeTimers('modern');
+
+    const promise = blah();
+    jest.runAllTicks();
+    await promise;
     expect(nock.isDone()).toBe(true);
 });
