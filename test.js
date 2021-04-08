@@ -43,6 +43,8 @@ async function request() {
 }
 
 it('works', async () => {
+    jest.useFakeTimers();
     const res = await request();
+    const res2 = await request();
     expect(res).toBe('hello world');
 });
