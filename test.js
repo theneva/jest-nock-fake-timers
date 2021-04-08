@@ -1,26 +1,26 @@
-// const nock = require('nock');
+const nock = require('nock');
 const http = require('http');
-const {promisify} = require('util');
 
 const port = 6767;
 
-let server;
+// let server;
+//
+// beforeAll(done => {
+//     console.log('binding');
+//     server = http.createServer((req, res) => {
+//         res.write('hello world');
+//         res.end();
+//     });
+//     server.listen(port, done);
+// });
+//
+// afterAll(done => {
+//     server.close(done);
+// });
 
-beforeAll(done => {
-    server = http.createServer((req, res) => {
-        res.write('hello world');
-        res.end();
-    });
-    server.listen(port, done);
-});
-
-afterAll(done => {
-    server.close(done);
-});
-
-async function request() {
+async function realRequest() {
     return new Promise((resolve, reject) => {
-        const req = http.request('http://localhost:6767', {}, res => {
+        const req = http.request('http://localhost:6767/whatever', {}, res => {
             const responseChunks = [];
 
             res.on('data', chunk => {
@@ -42,9 +42,23 @@ async function request() {
     });
 }
 
+// const request = jest.fn(realRequest);
+//
+// async function blah() {
+//     await request();
+//     await request();
+// }
+
+async function blah() {
+    await realRequest();
+    await realRequest();
+}
+
 it('works', async () => {
-    jest.useFakeTimers();
-    const res = await request();
-    const res2 = await request();
-    expect(res).toBe('hello world');
+    nock('http://localhost:6767')
+        .get('/whatever')
+        .times(2)
+        .reply(200, 'ok');
+    await blah();
+    expect(nock.isDone()).toBe(true);
 });
