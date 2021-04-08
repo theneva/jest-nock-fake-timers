@@ -38,7 +38,7 @@ it('works when the function has sequential requests', async () => {
 
     // Works with legacy timers, but I can't seem to find a workaround
     // with modern ones without starting both requests before returning
-    // from blah()`.
+    // from `sendTwoSequentialRequests()`.
     jest.useFakeTimers('legacy');
     // jest.useFakeTimers('modern');
 
