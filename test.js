@@ -1,29 +1,5 @@
+const nock = require('nock');
 const http = require('http');
-
-const server = http.createServer((req, res) => {
-    console.log('received request');
-    res.write('hello');
-    res.end();
-});
-
-beforeAll(done => {
-    server.on('error', err => {
-        throw err;
-    })
-    server.listen(6767, () => {
-        done();
-    });
-});
-
-afterAll(done => {
-    server.close(err => {
-        if (err) {
-            throw err;
-        }
-
-        done();
-    });
-});
 
 async function sendRequest() {
     return new Promise((resolve, reject) => {
@@ -35,7 +11,6 @@ async function sendRequest() {
             });
 
             res.on('error', err => {
-                console.log(err);
                 reject(err);
             });
 
@@ -51,13 +26,16 @@ async function sendRequest() {
 }
 
 async function sendTwoSequentialRequests() {
-    return [
-        await sendRequest(),
-        await sendRequest(),
-    ];
+    await sendRequest();
+    await sendRequest();
 }
 
 it('works when the function has sequential requests', async () => {
+    nock('http://localhost:6767')
+        .get('/whatever')
+        .times(2)
+        .reply(200, 'ok');
+
     // Works with legacy timers, but I can't seem to find a workaround
     // with modern ones without starting both requests before returning
     // from `sendTwoSequentialRequests()`.
@@ -71,7 +49,7 @@ it('works when the function has sequential requests', async () => {
     // run all ticks again between landing the first request
     // and setting off the second.
     const promise = sendTwoSequentialRequests();
-    // jest.runAllTicks();
-    const results = await promise;
-    expect(results).toStrictEqual(['hello', 'hello'])
-}, 5000);
+    jest.runAllTicks();
+    await promise;
+    expect(nock.isDone()).toBe(true);
+});
