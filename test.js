@@ -36,7 +36,7 @@ it('works when the function has sequential requests', async () => {
         .times(2)
         .reply(200, 'ok');
 
-    jest.useFakeTimers('modern');
+    jest.useFakeTimers('legacy');
 
     const promise = blah();
     jest.runAllTicks();
